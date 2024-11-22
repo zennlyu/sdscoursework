@@ -1,0 +1,97 @@
+---
+title: "Lab 2 - Statistics and Data Analysis II"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+author: "Zhen Liu"
+date: "November 20, 2024"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+This lab is done by Zhen Liu
+
+```{r Task 1}
+data <- read.csv("hsbc_lab2.csv")
+
+str(data)
+summary(data)
+
+model1 <- lm(lifesat ~ BMI, data = data)
+summary(model1)
+```
+The coefficient represents the change in life satisfaction for one unit increase in BMI. The p-value tests the null hypothesis that β = 0 means BMI has no effect on life satisfaction. Small p-value suggests that BMI significantly influences life satisfaction.
+
+```{r Task 2}
+model_quad <- lm(lifesat ~ BMI + I(BMI^2), data = data)
+
+summary(model_quad)
+```
+The coefficient for BMI^2 determines whether the relationship is nonlinear. If the coefficient is negative, the curve opens downward, suggesting a peak in life satisfaction at a certain BMI value. If positive, the curve opens upward.
+
+```{r Task 3}
+model_interaction <- lm(lifesat ~ BMI * sex, data = data)
+
+summary(model_interaction)
+```
+The β1 shows the effect of BMI on life satisfaction for the reference gender。
+The β2 shows the difference in life satisfaction between genders when BMI = 0.
+The β3 indicates how the effect of BMI on life satisfaction differs between boys and girls.
+
+
+```{r Task 4}
+hypo_girls <- data.frame(sex = "Girl", BMI = c(20, 30))
+
+hypo_girls$lifesat <- predict(model_interaction, newdata = hypo_girls)
+
+print(hypo_girls)
+```
+
+
+
+```{r Task 5}
+hypo_boys <- data.frame(sex = "Boy", BMI = c(20, 30))
+
+hypo_boys$lifesat <- predict(model_interaction, newdata = hypo_boys)
+
+print(hypo_boys)
+```
+
+```{r Task 6}
+all_predictions <- rbind(hypo_girls, hypo_boys)
+
+library(ggplot2)
+ggplot(all_predictions, aes(x = BMI, y = lifesat, color = sex, group = sex)) +
+  geom_line() +
+  geom_point(size = 3) +
+  labs(
+    title = "Predicted Life Satisfaction by BMI and Gender",
+    x = "BMI",
+    y = "Life Satisfaction",
+    color = "Gender"
+  ) +
+  theme_minimal()
+```
+
+```{r Task 7}
+plot(model_interaction$fitted.values, residuals(model_interaction),
+     xlab = "Fitted Values",
+     ylab = "Residuals",
+     main = "Residuals vs Fitted Values")
+abline(h = 0, col = "red")
+
+hist(residuals(model_interaction), main = "Histogram of Residuals", xlab = "Residuals")
+
+qqnorm(residuals(model_interaction))
+qqline(residuals(model_interaction), col = "red")
+```
+
+7.a: the residuals appear randomly scattered around zero, the assumption of homoscedasticity is likely met.
+
+7.b: If the residuals follow a straight line in the Q-Q plot and are approximately bell-shaped in the histogram, the normality assumption is likely met.
+
+7.c: There might be other factors should be considered such as family income, education time, living quality and friendship etc. They can exert influence on the life satisfaction.
+
+7.d: The data shows surveyed school children in 2014. Inferences from the analysis are limited to this population groups and may not fit for other demographics.
